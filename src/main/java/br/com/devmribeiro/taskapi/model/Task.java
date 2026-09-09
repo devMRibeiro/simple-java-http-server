@@ -14,6 +14,7 @@ public record Task(
 		TaskPriority priority,
 		LocalDateTime dueDate,
 		LocalDateTime createdAt,
-		LocalDateTime updatedAt
-	) {
+		LocalDateTime updatedAt,
+		UUID userId
+) {
 }
