@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +20,7 @@ import br.com.devmribeiro.taskapi.types.TaskStatus;
 
 public class TaskRepository {
 	
-	public Task findById(UUID userId, UUID id) {
+	public List<Task> list(UUID taskId) {
 		
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -29,51 +30,11 @@ public class TaskRepository {
 			
 			conn = ConnFactory.open();
 			
-			ps = conn.prepareStatement("select * from task where user_id = ? and id = ?");
-			ps.setObject(1, userId);
-			ps.setObject(2, id);
+			String clause = taskId != null ? "where id = ('" + taskId + "'::uuid)" : "";
 			
-			Log.i(ps);
+			ps = conn.prepareStatement("select * from task " + clause + " order by created_at");
 			
-			rs = ps.executeQuery();
-			
-			if (rs.next()) {
-				Task task = new Task(
-						UUID.fromString(rs.getString("id")),
-						rs.getString("title"),
-						rs.getString("description"),
-						TaskStatus.valueOf(rs.getString("status")),
-						TaskPriority.valueOf(rs.getString("priority")),
-						rs.getObject("due_date", LocalDateTime.class),
-						rs.getObject("created_at", LocalDateTime.class),
-						rs.getObject("updated_at", LocalDateTime.class),
-						UUID.fromString(rs.getString("user_id"))
-				);
-				return task;
-			}
-			
-		} catch (Exception e) {
-			Log.e("Erro ao realizar select", e);
-		} finally {
-			ConnFactory.close(rs, ps, conn);
-		}
-		return null;
-	}
-
-	public List<Task> list(UUID userId) {
-		
-		Connection conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		
-		try {
-			
-			conn = ConnFactory.open();
-			
-			ps = conn.prepareStatement("select * from task where user_id = ? order by created_at");
-			ps.setObject(1, userId);
-			
-			Log.i(ps);
+			Log.i(ps.toString());
 			
 			rs = ps.executeQuery();
 			
@@ -86,10 +47,9 @@ public class TaskRepository {
 						rs.getString("description"),
 						TaskStatus.valueOf(rs.getString("status")),
 						TaskPriority.valueOf(rs.getString("priority")),
-						rs.getObject("due_date", LocalDateTime.class),
-						rs.getObject("created_at", LocalDateTime.class),
-						rs.getObject("updated_at", LocalDateTime.class),
-						UUID.fromString(rs.getString("user_id")))
+						localDateTimeToString(rs.getObject("due_date", LocalDateTime.class)),
+						localDateTimeToString(rs.getObject("created_at", LocalDateTime.class)),
+						localDateTimeToString(rs.getObject("updated_at", LocalDateTime.class)))
 				);
 			}
 			return tasks;
@@ -120,18 +80,16 @@ public class TaskRepository {
 					"	priority, " +
 					"	due_date, " + 
 					"	created_at, " + 
-					"	updated_at, " + 
-					"	user_id " +
-					") values (?, ?, ?, ?, ?, now(), now(), ?)");
+					"	updated_at " + 
+					") values (?, ?, ?, ?, ?, now(), now())");
 			
 			ps.setString(1, task.title());
 			ps.setString(2, task.description());
-			ps.setString(3, task.status().toString());
+			ps.setString(3, TaskStatus.IN_PROGRESS.name());
 			ps.setString(4, task.priority().toString());
 			ps.setObject(5, task.dueDate());
-			ps.setObject(6, task.userId());
 			
-			Log.i(ps);
+			Log.i(ps.toString());
 			
 			if (ps.executeUpdate() == 1)
 				conn.commit();
@@ -143,7 +101,7 @@ public class TaskRepository {
 		}
 	}
 	
-	public void update(TaskUpdateDTO task) {
+	public void update(UUID taskId, TaskUpdateDTO task) {
 		
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -160,8 +118,7 @@ public class TaskRepository {
 					" 	status = ?, " +
 					"	priority = ?, " +
 					"	due_date = ?, " + 
-					"	updated_at = now(), " + 
-					"	user_id = ? " +
+					"	updated_at = now() " + 
 					"where " +
 					"	id = ?");
 			
@@ -170,10 +127,9 @@ public class TaskRepository {
 			ps.setString(3, task.status().toString());
 			ps.setString(4, task.priority().toString());
 			ps.setObject(5, task.dueDate());
-			ps.setObject(6, task.userId());
-			ps.setObject(7, task.id());
+			ps.setObject(6, taskId);
 			
-			Log.i(ps);
+			Log.i(ps.toString());
 			
 			if (ps.executeUpdate() == 1)
 				conn.commit();
@@ -185,7 +141,7 @@ public class TaskRepository {
 		}
 	}
 	
-	public void delete(UUID taskId, UUID userId) {
+	public void delete(UUID taskId) {
 		
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -195,11 +151,10 @@ public class TaskRepository {
 			conn = ConnFactory.open();
 			conn.setAutoCommit(false);
 			
-			ps = conn.prepareStatement("delete from task where id = ? and user_id = ?");
+			ps = conn.prepareStatement("delete from task where id = ?");
 			ps.setObject(1, taskId);
-			ps.setObject(2, userId);
 			
-			Log.i(ps);
+			Log.i(ps.toString());
 			
 			if (ps.executeUpdate() == 1)
 				conn.commit();
@@ -209,5 +164,9 @@ public class TaskRepository {
 		} finally {
 			ConnFactory.close(ps, conn);
 		}
+	}
+	
+	private String localDateTimeToString(LocalDateTime dateTime) {
+		return dateTime != null ? dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")) : null;
 	}
 }
