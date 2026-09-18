@@ -12,6 +12,32 @@
 			<artifactId>db-connection-manager</artifactId>
 			<version>v1.0.0</version>
 		</dependency>
+		
+		<!-- Jackson -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.22.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.22.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+			<version>2.22.1</version>
+		</dependency>
+		
+		<!-- PostgreSQL -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.7.13</version>
+		</dependency>
 	</dependencies>
 
 	<repositories>
