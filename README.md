@@ -6,7 +6,7 @@ API REST simples para gerenciamento de tarefas (tasks), construída em **Java pu
 
 ## Tecnologias utilizadas
 
-- **Java** (sem lambdas, streams, method references ou funções anônimas)
+- **Java**
 - **com.sun.net.httpserver.HttpServer** — servidor HTTP nativo do JDK, sem frameworks web
 - **PostgreSQL** — banco de dados
 - **Jackson** (`jackson-core`, `jackson-databind`, `jackson-datatype-jsr310`) — serialização/deserialização JSON
